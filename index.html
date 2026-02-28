@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pashu Rakshak Pro | Devendra Singh Innovation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Hind:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary: #00ff88;
+            --accent: #00d4ff;
+            --bg-dark: #020617;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body { 
+            font-family: 'Hind', sans-serif; 
+            background: var(--bg-dark); 
+            color: #f8fafc; 
+            overflow-x: hidden; 
+            margin: 0;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+
+        .glass { background: var(--glass); backdrop-filter: blur(20px); border: 1px solid var(--border); }
+        .neon-text { text-shadow: 0 0 10px rgba(0, 255, 136, 0.5); }
+        .gradient-btn { background: linear-gradient(135deg, #00ff88, #00d4ff); color: #000; font-weight: 800; transition: 0.4s; }
+        .gradient-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0, 255, 136, 0.3); }
+
+        .hidden { display: none !important; }
+
+        /* Animations */
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .float-anim { animation: float 3s ease-in-out infinite; }
+
+        .tab-content { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Voice Waves */
+        .wave-container { display: flex; align-items: center; gap: 3px; height: 30px; }
+        .wave-bar { width: 4px; background: var(--primary); border-radius: 5px; animation: surge 1s infinite; }
+        @keyframes surge { 0%, 100% { height: 5px; } 50% { height: 25px; } }
+
+        /* Treatment Cards */
+        .disease-card { border-left: 4px solid var(--primary); transition: 0.3s; }
+        .disease-card:hover { background: rgba(255, 255, 255, 0.07); }
+    </style>
+</head>
+<body>
+
+<div class="max-w-lg mx-auto min-h-screen relative shadow-2xl bg-[#020617]">
+
+    <div id="splashScreen" class="fixed inset-0 z-[5000] bg-[#020617] flex flex-col items-center justify-center p-10">
+        <div class="relative mb-8">
+            <div class="absolute -inset-4 bg-green-500 rounded-full blur-2xl opacity-20 animate-pulse"></div>
+            <img src="https://cdn-icons-png.flaticon.com/512/1998/1998664.png" class="w-24 h-24 relative float-anim" alt="Logo">
+        </div>
+        <h1 class="text-5xl font-black italic tracking-tighter text-white mb-2 neon-text">पशु रक्षक</h1>
+        <p class="text-green-400 font-bold uppercase tracking-[0.3em] text-[10px] mb-20">Devendra Singh Innovation</p>
+        
+        <div id="bootStatus" class="text-gray-500 text-xs font-mono mb-4 italic">System Initializing...</div>
+        
+        <button onclick="handleStart()" class="w-full gradient-btn py-5 rounded-3xl text-xl uppercase tracking-widest shadow-lg">प्रवेश करें</button>
+    </div>
+
+    <div id="regForm" class="hidden min-h-screen p-8 pt-12">
+        <h2 class="text-4xl font-extrabold mb-2 text-white">स्वागत है!</h2>
+        <p class="text-gray-400 mb-10">अपनी और अपनी लोकेशन की जानकारी दें।</p>
+        
+        <div class="space-y-6">
+            <div class="relative">
+                <input type="text" id="rName" required class="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none focus:border-green-400 transition-all peer" placeholder=" ">
+                <label class="absolute left-5 top-5 text-gray-500 pointer-events-none transition-all peer-focus:-top-3 peer-focus:text-xs peer-focus:text-green-400 peer-focus:bg-[#020617] peer-focus:px-2">आपका शुभ नाम</label>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <select id="rState" onchange="updateDistricts()" class="bg-white/5 border border-white/10 p-5 rounded-2xl outline-none text-gray-300">
+                    <option value="">राज्य</option>
+                    <option value="MP">मध्य प्रदेश</option>
+                    <option value="UP">उत्तर प्रदेश</option>
+                </select>
+                <select id="rDist" class="bg-white/5 border border-white/10 p-5 rounded-2xl outline-none text-gray-300">
+                    <option value="">जिला</option>
+                </select>
+            </div>
+
+            <input type="text" id="rTahsil" placeholder="अपनी तहसील" class="w-full bg-white/5 border border-white/10 p-5 rounded-2xl outline-none focus:border-green-400">
+
+            <div id="locBox" class="p-6 glass rounded-3xl border-dashed border-2 border-green-500/30 flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-green-500 font-black uppercase">GPS लोकेशन</p>
+                    <p id="locText" class="text-sm text-gray-400 italic">अनुमति प्रतीक्षित...</p>
+                </div>
+                <i class="fas fa-map-marker-alt text-2xl text-green-500 animate-bounce"></i>
+            </div>
+
+            <button onclick="saveUser()" class="w-full gradient-btn py-5 rounded-3xl text-lg shadow-xl shadow-green-500/20">प्रोफाइल तैयार करें</button>
+        </div>
+    </div>
+
+    <div id="appBody" class="hidden">
+        
+        <nav class="p-6 glass sticky top-0 z-[100] flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 bg-gradient-to-tr from-green-400 to-blue-500 rounded-2xl flex items-center justify-center p-[2px]">
+                    <div class="w-full h-full bg-[#020617] rounded-2xl flex items-center justify-center overflow-hidden">
+                        <img id="userAvatar" src="https://ui-avatars.com/api/?name=Devendra&background=random" class="w-full h-full object-cover">
+                    </div>
+                </div>
+                <div>
+                    <h3 id="uNameDisplay" class="font-black text-xl leading-none">नमस्ते, देवेन्द्र</h3>
+                    <p id="uLocDisplay" class="text-[10px] text-green-400 font-bold uppercase tracking-widest mt-1">Panna, Madhya Pradesh</p>
+                </div>
+            </div>
+            <div id="aiVoiceWave" class="hidden wave-container">
+                <div class="wave-bar" style="animation-delay: 0.1s"></div>
+                <div class="wave-bar" style="animation-delay: 0.3s"></div>
+                <div class="wave-bar" style="animation-delay: 0.5s"></div>
+            </div>
+        </nav>
+
+        <main class="p-6 space-y-8 pb-32">
+            
+            <div id="homeTab" class="tab-content space-y-6">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="glass p-5 rounded-[30px] relative overflow-hidden">
+                        <p class="text-gray-400 text-xs font-bold uppercase">कुल दूध</p>
+                        <h4 class="text-3xl font-black mt-1">48 <span class="text-sm text-green-500">Ltr</span></h4>
+                        <div class="absolute -right-4 -bottom-4 opacity-10"><i class="fas fa-tint text-6xl"></i></div>
+                    </div>
+                    <div class="glass p-5 rounded-[30px] relative overflow-hidden">
+                        <p class="text-gray-400 text-xs font-bold uppercase">पशु सेहत</p>
+                        <h4 class="text-3xl font-black mt-1">98 <span class="text-sm text-blue-500">%</span></h4>
+                        <div class="absolute -right-4 -bottom-4 opacity-10"><i class="fas fa-heartbeat text-6xl"></i></div>
+                    </div>
+                </div>
+
+                <div class="bg-red-600/20 border border-red-600/50 p-6 rounded-[35px] flex items-center justify-between">
+                    <div>
+                        <h4 class="text-2xl font-black italic">1962 SOS</h4>
+                        <p class="text-xs font-bold text-red-400">सरकारी एम्बुलेंस सेवा</p>
+                    </div>
+                    <a href="tel:1962" class="w-14 h-14 bg-red-600 rounded-full flex items-center justify-center shadow-lg shadow-red-600/40 animate-pulse">
+                        <i class="fas fa-phone-alt text-xl text-white"></i>
+                    </a>
+                </div>
+
+                <div class="p-8 rounded-[45px] bg-gradient-to-br from-blue-900/40 to-black border border-blue-500/30 relative overflow-hidden">
+                    <div class="relative z-10">
+                        <span class="bg-blue-500 text-white text-[9px] px-3 py-1 rounded-full font-black uppercase">Advanced AI Mode</span>
+                        <h3 class="text-3xl font-black italic mt-4 mb-2">Gemini Pro AI</h3>
+                        <p class="text-gray-400 text-sm mb-6 italic">बीमार पशु की फोटो खींचें, एआई खुद बताएगा इलाज।</p>
+                        <button onclick="openAI()" class="w-full py-4 bg-blue-600 rounded-2xl font-black flex items-center justify-center gap-3">
+                            एआई स्कैन शुरू करें <i class="fas fa-expand"></i>
+                        </button>
+                    </div>
+                    <i class="fas fa-brain absolute -right-8 -bottom-8 text-[150px] text-blue-500/10"></i>
+                </div>
+            </div>
+
+            <div id="treatTab" class="tab-content hidden space-y-6">
+                <h3 class="text-2xl font-black">बीमारियां और इलाज</h3>
+                <div class="space-y-4">
+                    <div class="disease-card glass p-6 rounded-3xl" onclick="showDisease('लम्पी वायरस', 'नीम के पानी से नहलाएं, फिटकरी का लेप लगाएं।', 'एलएसडी वैक्सीन लगवाएं।')">
+                        <h4 class="font-bold text-xl text-green-400">लम्पी वायरस (Lumpy)</h4>
+                        <p class="text-xs text-gray-500 mt-1">त्वचा पर गांठें और बुखार</p>
+                    </div>
+                    <div class="disease-card glass p-6 rounded-3xl" onclick="showDisease('खुरपका-मुंहपका', 'लाल दवा (पोटेशियम) से पैर धोएं।', 'सालाना टीकाकरण कराएं।')">
+                        <h4 class="font-bold text-xl text-blue-400">FMD (खुरपका)</h4>
+                        <p class="text-xs text-gray-500 mt-1">मुंह और पैरों में छाले</p>
+                    </div>
+                    <div class="disease-card glass p-6 rounded-3xl" onclick="showDisease('थनैला रोग', 'दूध निकालने के बाद थनों को साफ रखें।', 'एंटीबायोटिक इलाज ज़रूरी।')">
+                        <h4 class="font-bold text-xl text-purple-400">थनैला (Mastitis)</h4>
+                        <p class="text-xs text-gray-500 mt-1">थनों में सूजन और खराब दूध</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="recordTab" class="tab-content hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-2xl font-black">पशु रजिस्टर</h3>
+                    <label class="bg-green-500/20 text-green-400 px-4 py-2 rounded-xl text-xs font-black cursor-pointer">
+                        <input type="file" accept="image/*" class="hidden" onchange="addNewRecord(this)">
+                        + नया पशु
+                    </label>
+                </div>
+                <div id="recordGrid" class="grid grid-cols-2 gap-4">
+                    </div>
+            </div>
+
+            <div id="bioTab" class="tab-content hidden">
+                <div class="text-center mb-8">
+                    <div class="w-32 h-32 mx-auto bg-green-500 rounded-[40px] p-1 mb-4 shadow-2xl shadow-green-500/20">
+                        <img src="https://ui-avatars.com/api/?name=Devendra+Singh&size=200&background=1B4332&color=fff" class="w-full h-full rounded-[40px] object-cover">
+                    </div>
+                    <h2 class="text-3xl font-black">देवेन्द्र सिंह</h2>
+                    <p class="text-green-500 font-bold uppercase text-xs tracking-widest">Founder & Developer</p>
+                </div>
+                <div class="glass p-8 rounded-[40px] mb-6">
+                    <h4 class="text-xl font-bold mb-4 text-white uppercase italic">मेरा लक्ष्य:</h4>
+                    <p class="text-gray-400 leading-relaxed italic">
+                        "पन्ना जिले के हर किसान को आधुनिक तकनीक से जोड़ना ही मेरा एकमात्र उद्देश्य है। पशु रक्षक प्रो के माध्यम से हम बेज़ुबान पशुओं की जान बचाने और किसानों की आय बढ़ाने की कोशिश कर रहे हैं।"
+                    </p>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <a href="https://www.instagram.com/h4x_zoro_ff_max" class="bg-pink-600/20 border border-pink-500/30 p-5 rounded-3xl text-center">
+                        <i class="fab fa-instagram text-2xl mb-2 text-pink-500"></i>
+                        <p class="text-[10px] font-black">INSTAGRAM</p>
+                    </a>
+                    <div class="bg-blue-600/20 border border-blue-500/30 p-5 rounded-3xl text-center">
+                        <i class="fas fa-envelope text-2xl mb-2 text-blue-500"></i>
+                        <p class="text-[10px] font-black">CONTACT</p>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <nav class="fixed bottom-0 left-0 right-0 max-w-lg mx-auto p-6 glass border-t border-white/10 rounded-t-[50px] flex justify-around items-center z-[500]">
+            <button onclick="switchTab('home')" class="nav-btn text-green-500 flex flex-col items-center">
+                <i class="fas fa-th-large text-2xl"></i>
+                <span class="text-[9px] font-black mt-1">HOME</span>
+            </button>
+            <button onclick="switchTab('treat')" class="nav-btn text-gray-500 flex flex-col items-center">
+                <i class="fas fa-stethoscope text-2xl"></i>
+                <span class="text-[9px] font-black mt-1">इलाज</span>
+            </button>
+            <button onclick="switchTab('record')" class="nav-btn text-gray-500 flex flex-col items-center">
+                <i class="fas fa-clipboard-list text-2xl"></i>
+                <span class="text-[9px] font-black mt-1">रिकॉर्ड</span>
+            </button>
+            <button onclick="switchTab('bio')" class="nav-btn text-gray-500 flex flex-col items-center">
+                <i class="fas fa-user-circle text-2xl"></i>
+                <span class="text-[9px] font-black mt-1 uppercase">Devendra</span>
+            </button>
+        </nav>
+    </div>
+
+    <div id="diseaseModal" class="hidden fixed inset-0 z-[6000] bg-black/90 p-10 flex flex-col items-center justify-center text-center">
+        <h2 id="mDiseaseName" class="text-4xl font-black text-green-400 mb-6"></h2>
+        <div class="glass p-8 rounded-[40px] w-full mb-6">
+            <h5 class="text-xs font-black text-blue-400 uppercase mb-2">घरेलू उपाय:</h5>
+            <p id="mHomeRem" class="text-gray-200 italic mb-6"></p>
+            <h5 class="text-xs font-black text-red-400 uppercase mb-2">डॉक्टरी सलाह:</h5>
+            <p id="mDocAdvice" class="text-gray-200 italic"></p>
+        </div>
+        <button onclick="closeDisease()" class="gradient-btn px-10 py-4 rounded-full">समझ गया</button>
+    </div>
+
+</div>
+
+<script>
+    const data = {
+        "MP": ["Panna", "Sagar", "Chhatarpur", "Jabalpur", "Bhopal", "Satna"],
+        "UP": ["Banda", "Hamirpur", "Mahoba", "Jhansi", "Lucknow"]
+    };
+
+    // Initialization
+    window.onload = () => {
+        setTimeout(() => {
+            document.getElementById('bootStatus').innerText = "Database Connected...";
+            setTimeout(() => {
+                if(localStorage.getItem('p_user')) {
+                    checkAuth();
+                }
+            }, 500);
+        }, 1500);
+    };
+
+    function handleStart() {
+        if (navigator.geolocation) {
+            document.getElementById('locText').innerText = "GPS सिग्नल मिल रहा है...";
+            navigator.geolocation.getCurrentPosition(pos => {
+                localStorage.setItem('p_lat', pos.coords.latitude);
+                localStorage.setItem('p_lon', pos.coords.longitude);
+                document.getElementById('locText').innerText = "सटीक लोकेशन मिल गई ✅";
+            }, () => {
+                document.getElementById('locText').innerText = "लोकेशन अनुमति नहीं मिली ⚠️";
+            });
+        }
+        checkAuth();
+    }
+
+    function checkAuth() {
+        document.getElementById('splashScreen').classList.add('hidden');
+        if(localStorage.getItem('p_user')) {
+            launchMain();
+        } else {
+            document.getElementById('regForm').classList.remove('hidden');
+        }
+    }
+
+    function updateDistricts() {
+        const s = document.getElementById('rState').value;
+        const d = document.getElementById('rDist');
+        d.innerHTML = '<option value="">जिला</option>';
+        if(data[s]) data[s].forEach(item => {
+            let op = document.createElement('option');
+            op.value = item; op.innerText = item;
+            d.appendChild(op);
+        });
+    }
+
+    function saveUser() {
+        const name = document.getElementById('rName').value;
+        const state = document.getElementById('rState').value;
+        const dist = document.getElementById('rDist').value;
+        const tahsil = document.getElementById('rTahsil').value;
+
+        if(!name || !dist || !tahsil) return alert("देवेन्द्र भाई, पूरी जानकारी भरें!");
+
+        const user = { name, state, dist, tahsil };
+        localStorage.setItem('p_user', JSON.stringify(user));
+        launchMain();
+    }
+
+    function launchMain() {
+        const user = JSON.parse(localStorage.getItem('p_user'));
+        document.getElementById('regForm').classList.add('hidden');
+        document.getElementById('appBody').classList.remove('hidden');
+        
+        document.getElementById('uNameDisplay').innerText = `नमस्ते, ${user.name}`;
+        document.getElementById('uLocDisplay').innerText = `${user.tahsil}, ${user.dist}`;
+        document.getElementById('userAvatar').src = `https://ui-avatars.com/api/?name=${user.name}&background=00ff88&color=000&bold=true`;
+        
+        speakIntro(user.name, user.tahsil, user.dist);
+    }
+
+    function speakIntro(name, tahsil, dist) {
+        window.speechSynthesis.cancel();
+        const text = `स्वागत है ${name} जी। आप तहसील ${tahsil} जिला ${dist} से पशु रक्षक ऐप में जुड़ चुके हैं। यह ऐप पन्ना के देवेन्द्र सिंह द्वारा बनाया गया है। अब आप पशुओं का इलाज जान सकते हैं।`;
+        const speech = new SpeechSynthesisUtterance(text);
+        speech.lang = 'hi-IN';
+        speech.rate = 0.9;
+        speech.onstart = () => document.getElementById('aiVoiceWave').classList.remove('hidden');
+        speech.onend = () => document.getElementById('aiVoiceWave').classList.add('hidden');
+        window.speechSynthesis.speak(speech);
+    }
+
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+        document.getElementById(tab + 'Tab').classList.remove('hidden');
+        
+        // Active Nav Styling
+        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.replace('text-green-500', 'text-gray-500'));
+        event.currentTarget.classList.replace('text-gray-500', 'text-green-500');
+    }
+
+    function showDisease(name, home, doc) {
+        document.getElementById('mDiseaseName').innerText = name;
+        document.getElementById('mHomeRem').innerText = home;
+        document.getElementById('mDocAdvice').innerText = doc;
+        document.getElementById('diseaseModal').classList.remove('hidden');
+    }
+
+    function closeDisease() {
+        document.getElementById('diseaseModal').classList.add('hidden');
+    }
+
+    function openAI() {
+        alert("देवेन्द्र सिंह द्वारा पावर्ड: एआई कैमरा खुल रहा है...");
+        window.open("https://gemini.google.com/app", "_blank");
+    }
+
+    function addNewRecord(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const grid = document.getElementById('recordGrid');
+                const div = document.createElement('div');
+                div.className = "glass h-44 rounded-3xl overflow-hidden relative border border-white/5";
+                div.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover">
+                                <div class="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black to-transparent">
+                                    <p class="text-[10px] font-black uppercase">Animal Record #${Math.floor(Math.random()*999)}</p>
+                                </div>`;
+                grid.prepend(div);
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>
+
+</body>
+</html>
